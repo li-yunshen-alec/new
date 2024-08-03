@@ -86,6 +86,18 @@ export async function POST(request) {
 
     console.log('repoDir', repoDir);
 
+    // Ensure the tempRepo directory is empty
+    try {
+      await fs.rm(repoDir, { recursive: true, force: true });
+    } catch (error) {
+      console.log('Error removing existing tempRepo directory:', error);
+    }
+
+    console.log('cloning...')
+
+    // Clone the repository
+    await git.clone(repoUrl, repoDir);    
+
     // List all files and folders recursively, skipping irrelevant directories and files
     const files = await listFiles(repoDir);
 
@@ -97,6 +109,9 @@ export async function POST(request) {
     const result = await run(combinedContent);
 
     console.log(result);
+
+    // Clean up: remove the cloned repository
+    await fs.rm(repoDir, { recursive: true, force: true });
 
     return NextResponse.json({ success: true, combinedContent });
   } catch (error) {
